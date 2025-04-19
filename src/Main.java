@@ -58,7 +58,7 @@ public class Main {
         }
         
      // After logout, go back to login screen
-        System.out.println("\nReturning to main menu...");}
+        System.out.println("\nReturning to main menu....");}
     }
 
     // ==== Applicant Dashboard ====
