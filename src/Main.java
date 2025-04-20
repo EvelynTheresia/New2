@@ -1,6 +1,8 @@
 package src;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
@@ -10,21 +12,22 @@ public class Main {
         List<User> users = new ArrayList<>();
         List<Applicant> allApplicants = new ArrayList<>();
         List<HDBOfficer> allOfficers = new ArrayList<>();
+        List<HDBManager> allManagers = new ArrayList<>();
         List<Project> allProjects = new ArrayList<>();
         List<Application> allApplications = new ArrayList<>();
         List<OfficerRegistration> allOfficerRegistrations = new ArrayList<>();
 
-        // ==== Sample users ====
-        Applicant a1 = new Applicant("S1234567A", 36, "single");
-        HDBOfficer o1 = new HDBOfficer("T7654321B", 40, "married");
-        HDBManager m1 = new HDBManager("S0001112C", 45, "married");
-
-        users.add(a1);
-        users.add(o1);
-        users.add(m1);
-
-        allApplicants.add(a1);
-        allOfficers.add(o1);
+        // ==== Load users from CSV ====
+        UserCSVLoader loader = new UserCSVLoader();
+        loader.loadUsersFromCSV(
+                "ApplicantList (2).csv",
+                "OfficerList (2).csv",
+                "ManagerList (2).csv",
+                users,
+                allApplicants,
+                allOfficers,
+                allManagers
+        );
 
         // ==== Controllers ====
         ProjectController projectController = new ProjectController(allProjects);
@@ -32,33 +35,35 @@ public class Main {
         OfficerController officerController = new OfficerController(allOfficerRegistrations);
         EnquiryController enquiryController = new EnquiryController();
 
-        // ==== Login ====
+        // ==== Login loop ====
         LoginManager loginManager = new LoginManager(users);
-        
-        while(true) {
-        User loggedInUser = null;
 
-        while (loggedInUser == null) {
-            loggedInUser = loginManager.login(sc);
-        }
+        while (true) {
+            User loggedInUser = null;
 
-        // ==== Role Routing ====
-        if (loggedInUser instanceof HDBManager manager) {
-            manager.viewManagerDashboard(
-                sc,
-                allProjects,
-                officerController,
-                allApplications,
-                allApplicants
-            );
-        } else if (loggedInUser instanceof HDBOfficer officer) {
-            officer.viewOfficerDashboard(sc, allApplications, officerController, projectController);
-        } else if (loggedInUser instanceof Applicant applicant) {
-            applicantDashboard(applicant, sc, projectController, applicationController, enquiryController);
+            while (loggedInUser == null) {
+                loggedInUser = loginManager.login(sc);
+            }
+
+            // ==== Role Routing ====
+            if (loggedInUser instanceof HDBManager manager) {
+                manager.viewManagerDashboard(
+                        sc,
+                        allProjects,
+                        officerController,
+                        allApplications,
+                        allApplicants
+                );
+            } else if (loggedInUser instanceof HDBOfficer officer) {
+                officer.viewOfficerDashboard(sc, allApplications, officerController, projectController);
+            } else if (loggedInUser instanceof Applicant applicant) {
+                applicantDashboard(applicant, sc, projectController, applicationController, enquiryController);
+            }
+
+            System.out.println("\nReturning to main menu...");
+            
+
         }
-        
-     // After logout, go back to login screen
-        System.out.println("\nReturning to main menu....");}
     }
 
     // ==== Applicant Dashboard ====
@@ -106,7 +111,6 @@ public class Main {
                 }
                 case 7 -> {
                     System.out.println("Logging out...");
-                    
                     return;
                 }
                 default -> System.out.println("Invalid option.");
