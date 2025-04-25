@@ -2,16 +2,16 @@
 
 This is a CLI-based Build-To-Order (BTO) housing application system built using Java, designed for use by HDB Managers, Officers, and Applicants. The system enables users to manage housing projects, apply for flats, handle officer registrations, respond to enquiries, and generate reports.
 
-## 🧑‍💻 Features
+##  Features
 
-### ✅ Applicant
+###  Applicant
 - View available BTO projects
 - Apply for BTO flat (based on eligibility)
 - Withdraw application or request withdrawal
 - Submit, view, edit, or delete enquiries
 - Switch password
 
-### 🛠️ HDB Officer
+###  HDB Officer
 - Register to handle a BTO project
 - View handled projects
 - Book flats for successful applicants
@@ -19,7 +19,7 @@ This is a CLI-based Build-To-Order (BTO) housing application system built using 
 - Generate booking receipt for applicant
 - Switch to applicant dashboard
 
-### 🏢 HDB Manager
+###  HDB Manager
 - Create, edit, delete BTO projects
 - Toggle project visibility
 - View/approve officer registrations
