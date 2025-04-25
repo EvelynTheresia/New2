@@ -4,7 +4,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
+/**
+ * Entry point of the HDB BTO Management System.
+ * Handles initialization, data loading from CSV files,
+ * user login, and dashboard routing based on roles.
+ */
 public class Main {
+
+    /**
+     * Main method to run the BTO Management System.
+     *
+     * @param args Command-line arguments (not used)
+     */
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
 
@@ -16,18 +27,31 @@ public class Main {
         List<Project> allProjects = new ArrayList<>();
         List<Application> allApplications = new ArrayList<>();
         List<OfficerRegistration> allOfficerRegistrations = new ArrayList<>();
+        List<Enquiry> enquiries = new ArrayList<>();
 
         // ==== Load users from CSV ====
         UserCSVLoader loader = new UserCSVLoader();
         loader.loadUsersFromCSV(
-                "ApplicantList (2).csv",
-                "OfficerList (2).csv",
-                "ManagerList (2).csv",
+                "ApplicantList.csv",
+                "OfficerList.csv",
+                "ManagerList.csv",
                 users,
                 allApplicants,
                 allOfficers,
                 allManagers
         );
+
+        ProjectCSVLoader projectLoader = new ProjectCSVLoader();
+        projectLoader.loadProjectsFromCSV("ProjectList.csv", allProjects, allManagers, allOfficers);
+
+        EnquiryCSVLoader enquiryLoader = new EnquiryCSVLoader();
+        enquiries = enquiryLoader.loadEnquiriesFromCSV("EnquiryList.csv", allProjects, allApplicants);
+
+        ApplicationCSVLoader appLoader = new ApplicationCSVLoader();
+        allApplications = appLoader.loadApplicationsFromCSV("ApplicationList.csv", allApplicants, allProjects, allApplications);
+
+        OfficerRegistrationCSVLoader regLoader = new OfficerRegistrationCSVLoader();
+        allOfficerRegistrations = regLoader.loadRegistrationsFromCSV("RegistrationList.csv", allOfficers, allProjects);
 
         // ==== Controllers ====
         ProjectController projectController = new ProjectController(allProjects);
@@ -47,122 +71,22 @@ public class Main {
 
             // ==== Role Routing ====
             if (loggedInUser instanceof HDBManager manager) {
-                manager.viewManagerDashboard(
-                        sc,
-                        allProjects,
-                        officerController,
-                        allApplications,
-                        allApplicants
-                );
+                new ManagerUI(manager).showDashboard(sc, allProjects, officerController, allApplications, allApplicants);
             } else if (loggedInUser instanceof HDBOfficer officer) {
-                officer.viewOfficerDashboard(sc, allApplications, officerController, projectController);
+                new OfficerUI(officer).showDashboard(sc, allApplications, officerController, projectController, applicationController, enquiryController, allApplicants);
             } else if (loggedInUser instanceof Applicant applicant) {
-                applicantDashboard(applicant, sc, projectController, applicationController, enquiryController);
+                ApplicantUI applicantUI = new ApplicantUI(projectController, applicationController, enquiryController);
+                applicantUI.show(applicant, sc);
             }
 
+            // ==== Save data back to CSV ====
             System.out.println("\nReturning to main menu...");
-            
-
-        }
-    }
-
-    // ==== Applicant Dashboard ====
-    public static void applicantDashboard(Applicant applicant, Scanner sc,
-                                          ProjectController pc,
-                                          ApplicationController ac,
-                                          EnquiryController ec) {
-        while (true) {
-            System.out.println("\nWelcome, " + applicant.getNric());
-            System.out.println("1. View Project List");
-            System.out.println("2. Apply for BTO");
-            System.out.println("3. View Application Status");
-            System.out.println("4. Withdraw Application");
-            System.out.println("5. Enquiry Menu");
-            System.out.println("6. Change Password");
-            System.out.println("7. Logout");
-            System.out.print("Choose: ");
-
-            int choice = Integer.parseInt(sc.nextLine());
-
-            switch (choice) {
-                case 1 -> pc.viewProjectsForApplicant(applicant);
-                case 2 -> {
-                    System.out.print("Enter Project Name to apply: ");
-                    String pname = sc.nextLine();
-                    Project p = pc.getProjectByName(pname);
-                    if (p == null) {
-                        System.out.println("Project not found.");
-                        break;
-                    }
-
-                    System.out.print("Enter flat type (2 or 3): ");
-                    String flatStr = sc.nextLine();
-                    FlatType ft = flatStr.equals("2") ? FlatType.TWO_ROOM : FlatType.THREE_ROOM;
-
-                    ac.apply(applicant, p, ft);
-                }
-                case 3 -> ac.viewStatus(applicant);
-                case 4 -> ac.withdraw(applicant);
-                case 5 -> enquiryMenu(applicant, sc, pc, ec);
-                case 6 -> {
-                    System.out.print("Enter new password: ");
-                    applicant.changePassword(sc.nextLine());
-                    System.out.println("Password changed.");
-                }
-                case 7 -> {
-                    System.out.println("Logging out...");
-                    return;
-                }
-                default -> System.out.println("Invalid option.");
-            }
-        }
-    }
-
-    // ==== Enquiry Menu ====
-    public static void enquiryMenu(Applicant applicant, Scanner sc,
-                                   ProjectController pc, EnquiryController ec) {
-        while (true) {
-            System.out.println("\n--- Enquiry Menu ---");
-            System.out.println("1. Submit Enquiry");
-            System.out.println("2. View My Enquiries");
-            System.out.println("3. Edit Enquiry");
-            System.out.println("4. Delete Enquiry");
-            System.out.println("5. Back");
-
-            int choice = Integer.parseInt(sc.nextLine());
-
-            switch (choice) {
-                case 1 -> {
-                    pc.viewProjectsForApplicant(applicant);
-                    System.out.print("Enter project name: ");
-                    String pname = sc.nextLine();
-                    Project p = pc.getProjectByName(pname);
-                    if (p != null) {
-                        System.out.print("Enter your enquiry: ");
-                        String msg = sc.nextLine();
-                        ec.submitEnquiry(applicant, p, msg);
-                    } else {
-                        System.out.println("Project not found.");
-                    }
-                }
-                case 2 -> ec.viewMyEnquiries(applicant);
-                case 3 -> {
-                    ec.viewMyEnquiries(applicant);
-                    System.out.print("Enter Enquiry ID to edit: ");
-                    int id = Integer.parseInt(sc.nextLine());
-                    System.out.print("Enter new content: ");
-                    String newText = sc.nextLine();
-                    ec.editEnquiry(applicant, id, newText);
-                }
-                case 4 -> {
-                    ec.viewMyEnquiries(applicant);
-                    System.out.print("Enter Enquiry ID to delete: ");
-                    int id = Integer.parseInt(sc.nextLine());
-                    ec.deleteEnquiry(applicant, id);
-                }
-                case 5 -> { return; }
-                default -> System.out.println("Invalid option.");
-            }
+            enquiryLoader.saveEnquiriesToCSV("EnquiryList.csv", allApplicants);
+            projectLoader.saveProjectsToCSV("ProjectList.csv", allProjects);
+            loader.saveUserToCSV("ApplicantList.csv", allApplicants);
+            appLoader.saveApplicationsToCSV("ApplicationList.csv", allApplications);
+            regLoader.saveRegistrationsToCSV("RegistrationList.csv", allOfficerRegistrations);
+            projectLoader.saveProjectsToCSV("ProjectList.csv", allProjects);
         }
     }
 }
