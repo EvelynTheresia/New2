@@ -1,7 +1,9 @@
-EnquiryID;Applicant;ProjectID;Content;Reply
-1;S1234567A;P001;When do I collect keys?;""""""
-2;T7654321B;P001;"Can I change flat type?""";""""""
-3;S9876543C;P002;How do I collect my keys?;Please wait for SMS notification.
-4;T2345678D;P003;What documents are needed for booking?;NRIC and income proof.
-5;S1234567A;P001;How do I make payment?;""""""
-6;S1234567A;P002;How big the house?;Pending
+Applicant;ProjectID;Content;Reply
+S1234567A;P001;When do I collect Keys?;idk
+S1234567A;P001;How much per month?;
+S1234567A;P002;How big is the house?;Pending
+S1234567A;P001;HHHHH;
+S1234567A;P001;HAHHAHA;
+T7654321B;P001;Can I change flat type?;
+S9876543C;P002;How do I collect my keys?;Please wait for SMS notification
+T2345678D;P003;What documents are needed for booking;NRIC and income proof.
